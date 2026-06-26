@@ -1,65 +1,45 @@
 # ==============================================================================
-# Cadence Incisive (NC-Sim) Self-Contained Makefile
+# Cadence Incisive (NC-Sim / Xcelium) Integrated Verification Makefile
 # ==============================================================================
 
-# Force the Makefile to execute rules using standard Bash shell
-SHELL := /bin/bash
+SHELL := /bin/bash 
 
-VLOG      = ncvlog
-ELAB      = ncelab
-SIM       = ncsim
+VLOG      = ncvlog 
+ELAB      = ncelab 
+SIM       = ncsim 
 
-# CRITICAL: Added '-work worklib' so ncvlog knows exactly where to store files without relying on external config files
-VLOG_FLAGS = -messages -sv -linedebug -work worklib
-ELAB_FLAGS  = -messages -access +rwc -timescale 1ns/1ps
-SIM_FLAGS   = -messages -input ncsim.key
+# Compilation Flags 
+VLOG_FLAGS = -messages -sv -linedebug -work worklib 
 
-DUT_SRCS   = router_sync.sv router_fifo.sv router_fsm.sv router_reg.sv router_top.sv
-TB_TOP     = tb_top.sv
+# CRITICAL CHANGE: Added '-coverage functional' flag to instrument functional coverage 
+ELAB_FLAGS  = -messages -access +rwc -timescale 1ns/1ps -coverage functional 
 
-all: clean compile elab sim
+# CRITICAL CHANGE: Added '-covoverwrite' so each regression suite replaces out-of-date database logs 
+SIM_FLAGS   = -messages -input ncsim.key -covoverwrite 
 
-# 1. Compile Phase with Robust Auto-Initialization
-compile:
-	@echo "========================================================="
-	@echo "[MAKE] Forcing Library Sandbox Creation..."
-	@echo "========================================================="
-	mkdir -p INCA_libs/worklib
-	@rm -f cds.lib hdl.var
-	@echo "DEFINE worklib ./INCA_libs/worklib" > cds.lib
-	@echo "DEFINE WORK worklib" > hdl.var
-	@echo "========================================================="
-	@echo "[MAKE] Compiling Hardware DUT Core Files..."
-	@echo "========================================================="
-	$(VLOG) $(VLOG_FLAGS) $(DUT_SRCS)
-	@echo "========================================================="
-	@echo "[MAKE] Compiling Testbench Infrastructure Wrapper..."
-	@echo "========================================================="
-	$(VLOG) $(VLOG_FLAGS) $(TB_TOP)
+# Added coverage component directly into your Core DUT Sources array 
+DUT_SRCS   = router_sync.sv router_fifo.sv router_fsm.sv router_reg.sv router_top.sv router_cov.sv 
+TB_TOP     = tb_top.sv 
 
-# 2. Elaboration Phase
-elab:
-	@echo "========================================================="
-	@echo "[MAKE] Elaborating Design Snapshot (tb_top)..."
-	@echo "========================================================="
-	$(ELAB) $(ELAB_FLAGS) worklib.tb_top
+all: clean compile elab sim 
 
-# 3. Simulation Phase
-sim:
-	@echo "========================================================="
-	@echo "[MAKE] Launching NC-Sim Functional Verification..."
-	@echo "========================================================="
-	$(SIM) $(SIM_FLAGS) worklib.tb_top
+compile: 
+	mkdir -p INCA_libs/worklib [cite: 370]
+	@rm -f cds.lib hdl.var [cite: 370]
+	@echo "DEFINE worklib ./INCA_libs/worklib" > cds.lib [cite: 370]
+	@echo "DEFINE WORK worklib" > hdl.var [cite: 370]
+	$(VLOG) $(VLOG_FLAGS) $(DUT_SRCS) [cite: 370]
+	$(VLOG) $(VLOG_FLAGS) $(TB_TOP) [cite: 370]
 
-# 4. Waveform GUI Viewer Phase
-waves:
-	$(SIM) -gui worklib.tb_top:sv &
+elab: [cite: 370]
+	$(ELAB) $(ELAB_FLAGS) worklib.tb_top [cite: 370]
 
-# 5. Directory Cleanup Phase
-clean:
-	@echo "========================================================="
-	@echo "[MAKE] Cleaning Up Directory Artifacts..."
-	@echo "========================================================="
-	rm -rf INCA_libs waves.shm ncsim.shm INCA_libs
-	rm -f *.log *.key *.vcd
-	rm -f cds.lib hdl.var
+sim: [cite: 370]
+	$(SIM) $(SIM_FLAGS) worklib.tb_top [cite: 370]
+
+waves: [cite: 370]
+	$(SIM) -gui worklib.tb_top:sv & [cite: 370]
+
+clean: [cite: 370]
+	rm -rf INCA_libs waves.shm ncsim.shm cov_work *.ccv [cite: 370]
+	rm -f *.log *.key *.vcd cds.lib hdl.var [cite: 370]
