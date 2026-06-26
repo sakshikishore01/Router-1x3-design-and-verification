@@ -15,24 +15,23 @@ module tb_top;
     router_environment env;
 
     // 3. Connect your physical core top module DUT wrapper
-    router_top DUT (
-        .clk        (clk),
-        .resetn     (inf.resetn),
-        .datain     (inf.datain),
-        .pkt_valid  (inf.pkt_valid),
-        .read_enb_0 (inf.read_enb_0),
-        .read_enb_1 (inf.read_enb_1),
-        .read_enb_2 (inf.read_enb_2),
-        .data_out_0 (inf.data_out_0),
-        .data_out_1 (inf.data_out_1),
-        .data_out_2 (inf.data_out_2),
-        .vld_out_0  (inf.vld_out_0),
-        .vld_out_1  (inf.vld_out_1),
-        .vld_out_2  (inf.vld_out_2),
-        .busy       (inf.busy),
-        .error      (inf.error)
-    );
-
+router_cov cov_monitor_inst (
+    .clk           (clk),
+    .resetn        (resetn),
+    .datain        (datain),
+    .pkt_valid     (pkt_valid),
+    .current_state (DUT.fsm_block.current_state), // Hierarchical probe into FSM
+    .write_enb     (DUT.write_enb),
+    .fifo_full     (DUT.fifo_full),
+    .vld_out_0     (vld_out_0),
+    .vld_out_1     (vld_out_1),
+    .vld_out_2     (vld_out_2),
+    .read_enb_0    (read_enb_0),
+    .read_enb_1    (read_enb_1),
+    .read_enb_2    (read_enb_2),
+    .parity_done   (DUT.reg_block.parity_done),   // Hierarchical probe into Register module
+    .error         (error)
+);
     // 4. Verification Test Execution Block
     initial begin
         $display("[TOP_ROOT] Initializing Object-Oriented Layered Test Environment...");
